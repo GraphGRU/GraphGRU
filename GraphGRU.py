@@ -138,9 +138,9 @@ class GRULinear(nn.Module):
             "bias_init_value": self._bias_init_value,
         }
 
-class TGCNCell(nn.Module):
+class GraphGRUCell(nn.Module):
     def __init__(self, num_units, num_nodes, device, input_dim=1):
-        super(TGCNCell, self).__init__()
+        super(GraphGRUCell, self).__init__()
         self.num_units = num_units
         self.num_nodes = num_nodes
         self.input_dim = input_dim
@@ -213,9 +213,9 @@ class TGCNCell(nn.Module):
         return x1
 
 
-class TGCN(nn.Module):
+class GraphGRU(nn.Module):
     def __init__(self,future, input_size, hidden_size, num_layers,inputwindow):
-        super(TGCN, self).__init__()
+        super(GraphGRU, self).__init__()
         self.num_nodes = 301
         self.input_dim =input_size
         self.output_dim = 1
@@ -226,8 +226,8 @@ class TGCN(nn.Module):
         self.device = torch.device('cuda')
 
         # -------------------构造模型-----------------------------
-        self.tgcn_model = TGCNCell(self.gru_units, self.num_nodes, self.device, self.input_dim)
-        self.tgcn_model1 = TGCNCell(self.gru_units, self.num_nodes, self.device, self.input_dim)
+        self.GraphGRU_model = GraphGRUCell(self.gru_units, self.num_nodes, self.device, self.input_dim)
+        self.GraphGRU_model1 = GraphGRUCell(self.gru_units, self.num_nodes, self.device, self.input_dim)
         self.fc1 = nn.Linear(self.gru_units*2, 120)
         #self.output_model = nn.Linear(self.gru_units*2, self.output_window * self.output_dim)
         self.output_model = nn.Linear(120, self.output_window * self.output_dim)
@@ -251,8 +251,8 @@ class TGCN(nn.Module):
         state1 = torch.zeros(batch_size, self.num_nodes * self.gru_units).to(self.device)
 
         for t in range(input_window):
-              state = self.tgcn_model(inputs[t], state)
-              state1 = self.tgcn_model1(inputs[input_window-t-1], state1)
+              state = self.GraphGRU_model(inputs[t], state)
+              state1 = self.GraphGRU_model1(inputs[input_window-t-1], state1)
 
 
         state = state.view(batch_size, self.num_nodes, self.gru_units)  # (batch_size, self.num_nodes, self.gru_units)
@@ -274,7 +274,7 @@ class TGCN(nn.Module):
 
 
 ##################################################分界线##########################################
-mymodel=TGCN(future,1,100,1,history).cuda()
+mymodel=GraphGRU(future,1,100,1,history).cuda()
 num_epochs=100
 learning_rate=0.0003
 criterion = torch.nn.MSELoss()    # mean-squared error for regression
@@ -340,4 +340,3 @@ with torch.no_grad():
 
 
 
-                                     
